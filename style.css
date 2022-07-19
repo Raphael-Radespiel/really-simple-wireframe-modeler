@@ -42,6 +42,7 @@ header h1{
 #vertices, #edges{
   flex: 1 1 auto; 
   border:2px solid black;
+  height: 50%;
 }
 
 /* Horizontal Container
@@ -59,4 +60,35 @@ header h1{
   flex: 1 1 auto;
   width: 70%;
   border:2px solid black;
+}
+
+/* Input Fields
+--------------------------*/
+.vertice-list, .edge-list{
+  overflow-y: scroll;
+  height:83%;
+}
+.vertice-input-field *, 
+.edge-input-field *{
+  display:inline;
+  width: 25%;
+}
+
+#vertice-index,
+#edge-index{
+  width:4%;
+}
+
+.button-container{
+  display:flex;
+  justify-content:space-evenly;
+}
+
+.button-container input{
+  flex: 1 1 auto;
+  width: 50%;
+}
+
+.button-container input:hover{
+  cursor:pointer;
 }

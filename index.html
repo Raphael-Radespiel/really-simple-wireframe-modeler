@@ -6,22 +6,48 @@
   <link rel="stylesheet" href="style.css">
   <script defer src="script.js"></script>
 </head>
-<body>
-  <div class="vertical container">
-    <header>
-      <h1>Really Simple<br>Wireframe Modeler</h1>
-    </header>
-    <main class="horizontal container">
-      <div class="vertical container">
-        <div id="vertices">
-          <h1>Points:</h1>
-        </div> 
-        <div id="edges">
-          <h1>Lines:</h1>
+<body class="vertical container">
+  <header>
+    <h1>Really Simple<br>Wireframe Modeler</h1>
+  </header>
+  <main class="horizontal container">
+    <div class="vertical container">
+      <div id="vertices">
+        <h1>Points:</h1>
+        <div class="vertice-list">
+          <div class="vertice-input-field">
+            <p id="vertice-index">1)</p>
+            <p>x:</p>
+            <input id="" type="text" name="">
+            <p>y:</p>
+            <input id="" type="text" name="">
+            <p>z:</p>
+            <input id="" type="text" name="">
+          </div> 
+          <div class="button-container">
+            <input type="button" value="remove">
+            <input type="button" value="add">
+          </div>
+        </div>
+      </div> 
+      <div id="edges">
+        <h1>Lines:</h1>
+        <div class="edge-list">
+          <div class="edge-input-field">
+            <p id="edge-index">1)</p>
+            <p>start:</p>
+            <input id="" type="text" name="">
+            <p>end:</p>
+            <input id="" type="text" name="">
+          </div> 
+          <div class="button-container">
+            <input type="button" value="remove">
+            <input type="button" value="add">
+          </div>
         </div>
       </div>
-      <canvas></canvas>
-    </main>
-  </div>
+    </div>
+    <canvas></canvas>
+  </main>
 </body>
 </html>
