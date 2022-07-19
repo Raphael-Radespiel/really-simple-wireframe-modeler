@@ -1,0 +1,62 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing: border-box;
+}
+
+body, html{
+  height: 100vh;
+}
+
+/* Container
+------------------*/
+.container{
+  display:flex;
+  justify-content:flex-start;
+}
+
+/* Vertical Container
+-----------------------*/
+.vertical{
+  height: 100%;
+  flex-direction:column;
+}
+
+.vertical header{
+  flex: 1 1 auto;
+  height:20%;
+  display: flex;
+  flex-direction: column;
+  justify-content:center;
+}
+
+.vertical main{
+  flex: 1 1 auto;
+  height: 80%;
+}
+
+header h1{
+  text-align:center;
+}
+
+#vertices, #edges{
+  flex: 1 1 auto; 
+  border:2px solid black;
+}
+
+/* Horizontal Container
+------------------------*/
+.horizontal{
+  flex-direction:row;
+}
+
+.horizontal.container .vertical.container{
+  flex: 1 1 auto;
+  width: 30%;
+  border:2px solid black;
+}
+.horizontal.container canvas{
+  flex: 1 1 auto;
+  width: 70%;
+  border:2px solid black;
+}
