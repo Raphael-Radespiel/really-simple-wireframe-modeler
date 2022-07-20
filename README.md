@@ -9,6 +9,7 @@ Todo List
   - change the vertice/edge-index to correspond to the correct one in order
   - remove last input field
   - remove last input field element from array
+- Add input event for text fields updating their corresponding object array
 - Add matrix functions 
 - Add rotation to the model
 - Possibly add the hability to change speed of rotation and what type of transformation we do to the matrix
