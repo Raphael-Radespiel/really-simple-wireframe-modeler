@@ -1,25 +1,62 @@
+// TEXT AREA INITALIZATION
+const textArea = document.querySelector('textarea');
+textArea.value = `# Vertices
+v -1 -1 -1
+v -1 1 -1
+v 1 1 -1
+v 1 -1 -1
+v -1 -1 1
+v -1 1 1
+v 1 1 1
+v 1 -1 1
+
+# Lines
+l 1 2
+l 2 3
+l 3 4
+l 4 1
+l 5 6 
+l 6 7 
+l 7 8 
+l 8 5
+l 1 5 
+l 2 6 
+l 3 7
+l 4 8
+`;
+
+// CANVAS INITIALIZATION
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
 canvas.height *= 2;
 canvas.width = canvas.height * 2;
 
-// Projection Matrix stuff
+// PROJECTION MATRIX INITIALIZATION
 let fNear = 0.1;
 let fFar = 1000;
 let fFov = 90;
 let fAspectRatio = canvas.height / canvas.width;
 let fFovRad = 1.0 / Math.tan(fFov * 0.5 / 180 * 3.14159);
 
-let simpleCube = {
+let wireMesh = {
   vertices: [[-1, -1, -1],[-1, 1, -1],[1, 1, -1],[1, -1, -1],[-1, -1, 1],[-1, 1, 1],[1, 1, 1],[1, -1, 1]],
   edges: [[1, 2], [2, 3], [3, 4], [4, 1], [5, 6], [6, 7], [7, 8], [8, 5],
   [1,5], [2, 6], [3, 7], [4, 8]],
 }
 
-let validWiremesh = {
-  vertices: {},
-  edges: {},
+let meshObj = {
+  vertices:[],
+  faces:[],
+  lines:[]
+}
+
+function createMeshObject(){
+return{
+  vertices: [],
+  faces: [],
+  lines: [], 
 };
+}
 
 function getEmptyMatrix(){
   return [[0,0,0,0],
@@ -45,6 +82,84 @@ identityMatrix[1][1] = 1;
 identityMatrix[2][2] = 1;
 identityMatrix[3][3] = 1;
 
+function initButtonEventHandler(){
+  const allButtons = document.querySelectorAll('.btn'); 
+  allButtons[0].addEventListener('click', function(){
+    meshObj = stringToMeshObject(textArea.value);
+    console.log(meshObj);
+  });
+}
+
+function stringToMeshObject(str){
+  let mesh = createMeshObject();
+  
+  for(let i = 0; i < str.length; i++){
+    switch(str[i]){
+      case 'v':
+          i += 2;
+          let vertexArray = [];
+          // READ 3 NUMBERS UNTIL SPACE
+          for(let j = 0; j < 3; j++){
+            // Loop through numbers
+            let vertexValue = '';
+            for(let k = i; str[k] != 'v'; k++){
+              i = k;
+              if(str[k] == ' '){
+                i++;
+                break;
+              }
+              if(str[k] == '\n') break;
+              vertexValue += str[k];
+            }
+            vertexArray.push(vertexValue);
+          }
+          mesh.vertices.push(vertexArray);
+        break;
+      case 'l':
+          i += 2;
+          let lineArray = [];
+          // READ 2 NUMBERS UNTIL SPACE
+          for(let j = 0; j < 2; j++){
+            // Loop through numbers
+            let lineValue = '';
+            for(let k = i; str[k] != 'l'; k++){
+              i = k;
+              if(str[k] == ' '){
+                i++;
+                break;
+              }
+              if(str[k] == '\n') break;
+              lineValue += str[k];
+            }
+            lineArray.push(lineValue);
+          }
+          mesh.lines.push(lineArray);
+        break;
+      case 'f':
+          i += 2;
+          let faceArray = [];
+          // READ ANY AMOUNT OF VERTICES
+          while(str[i] != '\n'){
+            // Loop through numbers
+            let faceValue = '';
+            for(let k = i; str[k] != 'f'; k++){
+              i = k;
+              if(str[k] == ' '){
+                i++;
+                break;
+              }
+              if(str[k] == '\n') break;
+              faceValue += str[k];
+            }
+            faceArray.push(faceValue);
+          }
+          mesh.faces.push(faceArray);
+        break;
+    }
+  }
+  return mesh;
+}
+
 function multiplyMatrixVector(i, m){
   let o = {
     x:0,
@@ -69,28 +184,14 @@ function arrayToCoordinate(array){
   return {x: array[0], y:array[1], z:array[2]};
 }
 
-function drawLine(edge){
+function drawLine(line){
   context.beginPath();
-  context.moveTo(edge[0].x, edge[0].y);
-  context.lineTo(edge[1].x, edge[1].y);
+  context.moveTo(line[0].x, line[0].y);
+  context.lineTo(line[1].x, line[1].y);
   context.stroke();
 }
 
-function matrixMultiplication(mat1, mat2){
-  let mat3 = getEmptyMatrix();
-
-  for(let i = 0; i < 4; i++){
-    for(let j = 0; j < 4; j++){
-      for(let k = 0; k < 4; k++){
-        mat3[i][j] += mat1[i][k] * mat2[k][j];
-      }
-    }
-  }
-  console.log(mat3);
-  return mat3;
-}
-
-function drawEdges(){
+function drawMesh(){
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   let speed = 0.01;
@@ -109,47 +210,49 @@ function drawEdges(){
   rotateXMatrix[2][2] = Math.cos(speed * 0.5);
   rotateXMatrix[3][3] = 1;
 
-  for(let i = 0; i < simpleCube.edges.length; i++){
-    let edgePosition = simpleCube.edges[i];
+  for(let i = 0; i < meshObj.lines.length; i++){
+    let linePosition = meshObj.lines[i];
 
 
-    simpleCube.vertices[edgePosition[0] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(simpleCube.vertices[edgePosition[0] - 1]),
+    meshObj.vertices[linePosition[0] - 1] = 
+      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]),
         rotateXMatrix));
-    simpleCube.vertices[edgePosition[1] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(simpleCube.vertices[edgePosition[1] - 1]),
+    meshObj.vertices[linePosition[1] - 1] = 
+      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[1] - 1]),
         rotateXMatrix));
 
-    simpleCube.vertices[edgePosition[0] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(simpleCube.vertices[edgePosition[0] - 1]),
+    meshObj.vertices[linePosition[0] - 1] = 
+      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]),
         rotateZMatrix));
-    simpleCube.vertices[edgePosition[1] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(simpleCube.vertices[edgePosition[1] - 1]),
+    meshObj.vertices[linePosition[1] - 1] = 
+      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[1] - 1]),
         rotateZMatrix));
 
-    let firstCoordinate = arrayToCoordinate(simpleCube.vertices[edgePosition[0] - 1]);
-    let secondCoordinate = arrayToCoordinate(simpleCube.vertices[edgePosition[1] - 1]);
+    let firstCoordinate = arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]);
+    let secondCoordinate = arrayToCoordinate(meshObj.vertices[linePosition[1] - 1]);
 
     firstCoordinate.z += 3;
     secondCoordinate.z += 3;
-    let projectedEdge = [multiplyMatrixVector(firstCoordinate, projectionMatrix),
+    let projectedLine = [multiplyMatrixVector(firstCoordinate, projectionMatrix),
       multiplyMatrixVector(secondCoordinate, projectionMatrix)];
 
-    projectedEdge[0].x += 1;
-    projectedEdge[0].y += 1;
-    projectedEdge[1].x += 1;
-    projectedEdge[1].y += 1;
+    projectedLine[0].x += 1;
+    projectedLine[0].y += 1;
+    projectedLine[1].x += 1;
+    projectedLine[1].y += 1;
    
-    projectedEdge[0].x *= 0.5 * canvas.width;
-    projectedEdge[0].y *= 0.5 * canvas.height;
-    projectedEdge[1].x *= 0.5 * canvas.width;
-    projectedEdge[1].y *= 0.5 * canvas.height;
+    projectedLine[0].x *= 0.5 * canvas.width;
+    projectedLine[0].y *= 0.5 * canvas.height;
+    projectedLine[1].x *= 0.5 * canvas.width;
+    projectedLine[1].y *= 0.5 * canvas.height;
 
-    drawLine(projectedEdge);
+    drawLine(projectedLine);
 
   }
 
-  setTimeout(drawEdges, 41);
+  setTimeout(drawMesh, 41);
 }
 
-drawEdges();
+initButtonEventHandler();
+
+drawMesh();
