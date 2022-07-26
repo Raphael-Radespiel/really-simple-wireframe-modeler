@@ -11,40 +11,13 @@
     <h1>Really Simple Wireframe Modeler</h1>
   </header>
   <main class="horizontal container">
-    <div class="vertical container">
-      <div id="vertices">
-        <h1>Points:</h1>
-        <div class="vertice-list">
-          <div class="vertice-input-field" id="vertex-1">
-            <p id="vertice-index">1)</p>
-            <p>x:</p>
-            <input id="x" type="text" name="">
-            <p>y:</p>
-            <input id="y" type="text" name="">
-            <p>z:</p>
-            <input id="z" type="text" name="">
-          </div> 
-          <div class="button-container">
-            <input id="vertice-remove" type="button" value="-">
-            <input id="vertice-add" type="button" value="+">
-          </div>
-        </div>
-      </div> 
-      <div id="edges">
-        <h1>Lines:</h1>
-        <div class="edge-list">
-          <div class="edge-input-field" id="edge-1">
-            <p id="edge-index">1)</p>
-            <p>start:</p>
-            <input id="start" type="text" name="">
-            <p>end:</p>
-            <input id="end" type="text" name="">
-          </div> 
-          <div class="button-container">
-            <input id="edge-remove" type="button" value="-">
-            <input id="edge-add" type="button" value="+">
-          </div>
-        </div>
+    <div class="vertical container obj">
+      <h1>OBJ File:</h1>
+      <textarea></textarea>
+      <div class="btn">Submit</div>
+      <div class="btn-container">
+        <div class="btn">Download</div>
+        <div class="btn">Upload</div>
       </div>
     </div>
     <canvas></canvas>
