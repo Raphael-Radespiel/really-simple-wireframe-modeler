@@ -38,12 +38,6 @@ let fFov = 90;
 let fAspectRatio = canvas.height / canvas.width;
 let fFovRad = 1.0 / Math.tan(fFov * 0.5 / 180 * 3.14159);
 
-let wireMesh = {
-  vertices: [[-1, -1, -1],[-1, 1, -1],[1, 1, -1],[1, -1, -1],[-1, -1, 1],[-1, 1, 1],[1, 1, 1],[1, -1, 1]],
-  edges: [[1, 2], [2, 3], [3, 4], [4, 1], [5, 6], [6, 7], [7, 8], [8, 5],
-  [1,5], [2, 6], [3, 7], [4, 8]],
-}
-
 let meshObj = {
   vertices:[],
   faces:[],
@@ -75,12 +69,14 @@ projectionMatrix[2][3] = 1.0;
 
 let rotateXMatrix = getEmptyMatrix();
 let rotateZMatrix = getEmptyMatrix();
-let identityMatrix = getEmptyMatrix();
 
-identityMatrix[0][0] = 1;
-identityMatrix[1][1] = 1;
-identityMatrix[2][2] = 1;
-identityMatrix[3][3] = 1;
+let deltaTime = 0;
+let speed = 0.01;
+rotateZMatrix[2][2] = 1;
+rotateZMatrix[3][3] = 1;
+
+rotateXMatrix[0][0] = 1;
+rotateXMatrix[3][3] = 1;
 
 function initButtonEventHandler(){
   const allButtons = document.querySelectorAll('.btn'); 
@@ -135,37 +131,13 @@ function stringToMeshObject(str){
           }
           mesh.lines.push(lineArray);
         break;
-      case 'f':
-          i += 2;
-          let faceArray = [];
-          // READ ANY AMOUNT OF VERTICES
-          while(str[i] != '\n'){
-            // Loop through numbers
-            let faceValue = '';
-            for(let k = i; str[k] != 'f'; k++){
-              i = k;
-              if(str[k] == ' '){
-                i++;
-                break;
-              }
-              if(str[k] == '\n') break;
-              faceValue += str[k];
-            }
-            faceArray.push(faceValue);
-          }
-          mesh.faces.push(faceArray);
-        break;
     }
   }
   return mesh;
 }
 
 function multiplyMatrixVector(i, m){
-  let o = {
-    x:0,
-    y:0,
-    z:0
-  };
+  let o = {};
 
 	o.x = (i.x * m[0][0] + i.y * m[1][0] + i.z * m[2][0] + m[3][0]).toFixed(4);
 	o.y = (i.x * m[0][1] + i.y * m[1][1] + i.z * m[2][1] + m[3][1]).toFixed(4);
@@ -194,63 +166,56 @@ function drawLine(line){
 function drawMesh(){
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  let speed = 0.01;
-  rotateZMatrix[0][0] = Math.cos(speed);
-  rotateZMatrix[0][1] = Math.sin(speed);
-  rotateZMatrix[1][0] = -Math.sin(speed);
-  rotateZMatrix[1][1] = Math.cos(speed);
-  rotateZMatrix[2][2] = 1;
-  rotateZMatrix[3][3] = 1;
-  
-
-  rotateXMatrix[0][0] = 1;
-  rotateXMatrix[1][1] = Math.cos(speed * 0.5);
-  rotateXMatrix[1][2] = Math.sin(speed * 0.5);
-  rotateXMatrix[2][1] = -Math.sin(speed * 0.5);
-  rotateXMatrix[2][2] = Math.cos(speed * 0.5);
-  rotateXMatrix[3][3] = 1;
-
   for(let i = 0; i < meshObj.lines.length; i++){
     let linePosition = meshObj.lines[i];
 
+    deltaTime += speed / 2;
+    let cos = Math.cos(deltaTime);
+    let sin = Math.sin(deltaTime);
+    let negSin = -Math.sin(deltaTime);
+    
+    // UPDATE ROTATION MATRICES
+    rotateZMatrix[0][0] = rotateZMatrix[1][1] = cos;
+    rotateZMatrix[0][1] = sin;
+    rotateZMatrix[1][0] = negSin;
+    rotateXMatrix[1][1] = rotateXMatrix[2][2] = cos;
+    rotateXMatrix[1][2] = sin;
+    rotateXMatrix[2][1] = negSin;
 
-    meshObj.vertices[linePosition[0] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]),
-        rotateXMatrix));
-    meshObj.vertices[linePosition[1] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[1] - 1]),
-        rotateXMatrix));
+    // Declare our output line
+    let outputLine = [arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]),
+      arrayToCoordinate(meshObj.vertices[linePosition[1] - 1])];
 
-    meshObj.vertices[linePosition[0] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]),
-        rotateZMatrix));
-    meshObj.vertices[linePosition[1] - 1] = 
-      Object.values(multiplyMatrixVector(arrayToCoordinate(meshObj.vertices[linePosition[1] - 1]),
-        rotateZMatrix));
+    // Rotate the Line Vertices
+    outputLine[0] = multiplyMatrixVector(outputLine[0], rotateZMatrix);
+    outputLine[1] = multiplyMatrixVector(outputLine[1], rotateZMatrix);
 
-    let firstCoordinate = arrayToCoordinate(meshObj.vertices[linePosition[0] - 1]);
-    let secondCoordinate = arrayToCoordinate(meshObj.vertices[linePosition[1] - 1]);
+    outputLine[0] = multiplyMatrixVector(outputLine[0], rotateXMatrix);
+    outputLine[1] = multiplyMatrixVector(outputLine[1], rotateXMatrix);
 
-    firstCoordinate.z += 3;
-    secondCoordinate.z += 3;
-    let projectedLine = [multiplyMatrixVector(firstCoordinate, projectionMatrix),
-      multiplyMatrixVector(secondCoordinate, projectionMatrix)];
+    // Translate the line vertices
+    outputLine[0].z += 5;
+    outputLine[1].z += 5;
 
-    projectedLine[0].x += 1;
-    projectedLine[0].y += 1;
-    projectedLine[1].x += 1;
-    projectedLine[1].y += 1;
+    // Project the Line vertices
+    outputLine[0] = multiplyMatrixVector(outputLine[0], projectionMatrix);
+    outputLine[1] = multiplyMatrixVector(outputLine[1], projectionMatrix);
+
+    // SCALE INTO VIEW
+    outputLine[0].x += 1;
+    outputLine[0].y += 1;
+    outputLine[1].x += 1;
+    outputLine[1].y += 1;
    
-    projectedLine[0].x *= 0.5 * canvas.width;
-    projectedLine[0].y *= 0.5 * canvas.height;
-    projectedLine[1].x *= 0.5 * canvas.width;
-    projectedLine[1].y *= 0.5 * canvas.height;
+    outputLine[0].x *= 0.5 * canvas.width;
+    outputLine[0].y *= 0.5 * canvas.height;
+    outputLine[1].x *= 0.5 * canvas.width;
+    outputLine[1].y *= 0.5 * canvas.height;
 
-    drawLine(projectedLine);
-
+    drawLine(outputLine);
   }
 
-  setTimeout(drawMesh, 41);
+  setTimeout(drawMesh, 50);
 }
 
 initButtonEventHandler();
